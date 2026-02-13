@@ -10,17 +10,17 @@
 
 from tkinter import messagebox, filedialog
 
-from theme_manager import ThemeManager
-from number_formatter import NumberFormatter
-from input_validator import InputValidator
-from error_logger import ErrorLogger
-from math_engine import MathEngine
-from scientific_operations import ScientificOperations
-from memory_manager import MemoryManager
-from history_manager import HistoryManager
-from history_view import HistoryView
-from file_manager import FileManager
-from statistics_reporter import StatisticsReporter
+from utils.theme_manager import ThemeManager
+from utils.number_formatter import NumberFormatter
+from utils.input_validator import InputValidator
+from services.error_logger import ErrorLogger
+from models.math_engine import MathEngine
+from models.scientific_operations import ScientificOperations
+from models.memory_manager import MemoryManager
+from models.history_manager import HistoryManager
+from views.history_view import HistoryView
+from services.file_manager import FileManager
+from models.statistics_reporter import StatisticsReporter
 
 
 class CalculatorController:

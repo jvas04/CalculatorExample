@@ -1,8 +1,8 @@
 import tkinter as tk
 
-from theme_manager import ThemeManager
-from calculator_view import CalculatorView
-from calculator_controller import CalculatorController
+from utils.theme_manager import ThemeManager
+from views.calculator_view import CalculatorView
+from controllers.calculator_controller import CalculatorController
 
 
 def main():
