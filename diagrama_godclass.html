@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Clases — Calculadora SIN Principios (God Class)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            padding: 30px 20px 10px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .header p {
+            font-size: 13px;
+            color: #636e72;
+        }
+        .header .bad-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 14px;
+            background: #e9456025;
+            border: 1px solid #e94560;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #e94560;
+            font-weight: 600;
+        }
+
+        /* ── Leyenda ── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            padding: 14px 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        .legend-icon {
+            font-size: 16px;
+        }
+
+        /* ── Contenedor principal ── */
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 700px;
+        }
+
+        /* ── SVG de conexiones ── */
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ── Nodo central (God Class) ── */
+        .god-class {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #e94560, #c0392b);
+            box-shadow: 0 0 60px rgba(233, 69, 96, 0.3), 0 8px 30px rgba(0,0,0,0.4);
+            z-index: 5;
+            text-align: center;
+            padding: 18px 14px;
+            border: 2px solid #e9456080;
+        }
+        .god-class .class-icon { font-size: 36px; margin-bottom: 4px; }
+        .god-class .class-name { font-size: 18px; font-weight: 800; color: #fff; }
+        .god-class .class-subtitle {
+            font-size: 11px;
+            color: #ffb8b8;
+            margin-top: 2px;
+        }
+        .god-class .class-stats {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .god-class .stat {
+            text-align: center;
+        }
+        .god-class .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .god-class .stat-label {
+            font-size: 9px;
+            color: #ffb8b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Burbujas de responsabilidad ── */
+        .responsibility {
+            position: absolute;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 3;
+            border: 2px solid;
+        }
+        .responsibility:hover {
+            transform: scale(1.12);
+            z-index: 10;
+            box-shadow: 0 8px 35px rgba(0,0,0,0.5);
+        }
+        .responsibility:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .resp-icon { font-size: 24px; margin-bottom: 3px; }
+        .resp-name {
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 0 6px;
+        }
+        .resp-count {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 1px;
+        }
+
+        /* Colores por tipo de responsabilidad */
+        .resp-ui {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #00b89480;
+            color: #00b894;
+        }
+        .resp-math {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #0984e380;
+            color: #74b9ff;
+        }
+        .resp-io {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #fdcb6e80;
+            color: #fdcb6e;
+        }
+        .resp-state {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #6c5ce780;
+            color: #a29bfe;
+        }
+        .resp-theme {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #fd79a880;
+            color: #fd79a8;
+        }
+        .resp-validate {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #55efc480;
+            color: #55efc4;
+        }
+
+        /* ── Líneas pulsantes ── */
+        @keyframes pulse-line {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        /* ── Tooltip ── */
+        .tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: #1e1e2e;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 230px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            z-index: 100;
+            text-align: left;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            pointer-events: none;
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #1e1e2e;
+        }
+        .tooltip h4 {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .tooltip .tt-section {
+            font-size: 10px;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+        }
+        .tooltip .tt-section strong {
+            color: #ddd;
+        }
+        .tooltip .tt-list {
+            font-size: 10px;
+            color: #e94560;
+            line-height: 1.5;
+            font-family: 'Consolas', monospace;
+        }
+        .tooltip .tt-warn {
+            font-size: 10px;
+            color: #fdcb6e;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* ── Warning banner ── */
+        .warning-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding: 16px 20px;
+            margin: 0 auto;
+            max-width: 900px;
+        }
+        .warning-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #e9456015;
+            border: 1px solid #e9456040;
+            border-radius: 10px;
+            padding: 8px 16px;
+        }
+        .warning-item .wi-icon { font-size: 18px; }
+        .warning-item .wi-text {
+            font-size: 11px;
+            color: #b0b0b0;
+            line-height: 1.3;
+        }
+        .warning-item .wi-text strong {
+            color: #e94560;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .diagram-container { transform: scale(0.6); transform-origin: top center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Diagrama de Clases UML — SIN Principios</h1>
+    <p>Calculadora "God Class" — Viola SRP (SOLID) y Baja Cohesión</p>
+    <div class="bad-badge">⚠️ Anti-patrón: God Class / Blob</div>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><span class="legend-icon">🖥️</span> Interfaz gráfica</div>
+    <div class="legend-item"><span class="legend-icon">🔢</span> Lógica matemática</div>
+    <div class="legend-item"><span class="legend-icon">📁</span> Archivos / I/O</div>
+    <div class="legend-item"><span class="legend-icon">🎨</span> Temas visuales</div>
+    <div class="legend-item"><span class="legend-icon">✅</span> Validación</div>
+    <div class="legend-item"><span class="legend-icon">💾</span> Estado / Memoria</div>
+</div>
+
+<div class="diagram-container" id="diagram">
+    <svg class="connections-svg" id="svgLines"></svg>
+
+    <!-- ══════════ GOD CLASS (CENTRO) ══════════ -->
+    <div class="god-class" id="node-god" style="left: calc(50% - 130px); top: 230px;">
+        <div class="class-icon">💀</div>
+        <div class="class-name">Calculator</div>
+        <div class="class-subtitle">"God Class" — 1 clase, 777 líneas</div>
+        <div class="class-stats">
+            <div class="stat">
+                <div class="stat-number">11+</div>
+                <div class="stat-label">Responsabilidades</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">28</div>
+                <div class="stat-label">Métodos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Atributos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ RESPONSABILIDADES MEZCLADAS (ALREDEDOR) ══════════ -->
+
+    <!-- 1: Construcción de UI (arriba) -->
+    <div class="responsibility resp-ui" id="resp-ui"
+         style="left:395px; top:20px; width:150px; height:80px;">
+        <div class="resp-icon">🖥️</div>
+        <div class="resp-name">Construcción de UI</div>
+        <div class="resp-count">~250 líneas</div>
+        <div class="tooltip">
+            <h4>🖥️ Construcción de Interfaz</h4>
+            <div class="tt-section"><strong>Métodos involucrados:</strong></div>
+            <div class="tt-list">
+                _build_entire_interface()<br>
+                (botones, display, frames, grid...)
+            </div>
+            <div class="tt-warn">⚠️ Un solo método de 250+ líneas construye TODA la UI</div>
+        </div>
+    </div>
+
+    <!-- 2: Operaciones aritméticas (derecha-arriba) -->
+    <div class="responsibility resp-math" id="resp-arith"
+         style="left:720px; top:100px; width:140px; height:80px;">
+        <div class="resp-icon">🔢</div>
+        <div class="resp-name">Aritmética</div>
+        <div class="resp-count">+, −, ×, ÷</div>
+        <div class="tooltip">
+            <h4>🔢 Operaciones Aritméticas</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                set_operator()<br>
+                calculate_result()
+            </div>
+            <div class="tt-warn">⚠️ Lógica de cálculo mezclada con actualización de UI</div>
+        </div>
+    </div>
+
+    <!-- 3: Operaciones científicas (derecha) -->
+    <div class="responsibility resp-math" id="resp-sci"
+         style="left:780px; top:270px; width:140px; height:80px;">
+        <div class="resp-icon">🧪</div>
+        <div class="resp-name">Científicas</div>
+        <div class="resp-count">√, x², %, ±, π</div>
+        <div class="tooltip">
+            <h4>🧪 Operaciones Científicas</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                sqrt_operation()<br>
+                square_operation()<br>
+                percentage_operation()<br>
+                toggle_sign()<br>
+                insert_pi()
+            </div>
+            <div class="tt-warn">⚠️ Cada método hace cálculo + validación + UI a la vez</div>
+        </div>
+    </div>
+
+    <!-- 4: Memoria (derecha-abajo) -->
+    <div class="responsibility resp-state" id="resp-mem"
+         style="left:720px; top:430px; width:130px; height:80px;">
+        <div class="resp-icon">💾</div>
+        <div class="resp-name">Memoria</div>
+        <div class="resp-count">MC, MR, M+, M−</div>
+        <div class="tooltip">
+            <h4>💾 Gestión de Memoria</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                memory_clear()<br>
+                memory_recall()<br>
+                memory_add()<br>
+                memory_subtract()
+            </div>
+            <div class="tt-warn">⚠️ Atributo self.memory mezclado con todo el estado</div>
+        </div>
+    </div>
+
+    <!-- 5: Historial (abajo) -->
+    <div class="responsibility resp-io" id="resp-hist"
+         style="left:460px; top:530px; width:140px; height:80px;">
+        <div class="resp-icon">📜</div>
+        <div class="resp-name">Historial</div>
+        <div class="resp-count">registros + ventana</div>
+        <div class="tooltip">
+            <h4>📜 Historial de Operaciones</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                show_history_window()<br>
+                _clear_history_and_close()
+            </div>
+            <div class="tt-warn">⚠️ Mezcla datos del historial con la UI de la ventana emergente</div>
+        </div>
+    </div>
+
+    <!-- 6: Persistencia / Archivos (abajo-izquierda) -->
+    <div class="responsibility resp-io" id="resp-file"
+         style="left:200px; top:510px; width:140px; height:80px;">
+        <div class="resp-icon">📁</div>
+        <div class="resp-name">Persistencia</div>
+        <div class="resp-count">JSON + TXT</div>
+        <div class="tooltip">
+            <h4>📁 Persistencia en Archivos</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                save_history_to_file()
+            </div>
+            <div class="tt-warn">⚠️ Lógica de archivos dentro de la misma clase de UI</div>
+        </div>
+    </div>
+
+    <!-- 7: Logging de errores (izquierda-abajo) -->
+    <div class="responsibility resp-io" id="resp-log"
+         style="left:50px; top:400px; width:130px; height:80px;">
+        <div class="resp-icon">🪵</div>
+        <div class="resp-name">Error Logging</div>
+        <div class="resp-count">archivo .log</div>
+        <div class="tooltip">
+            <h4>🪵 Registro de Errores</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                _log_error()
+            </div>
+            <div class="tt-warn">⚠️ I/O de archivos de log dentro de la clase Calculator</div>
+        </div>
+    </div>
+
+    <!-- 8: Temas visuales (izquierda) -->
+    <div class="responsibility resp-theme" id="resp-theme"
+         style="left:30px; top:230px; width:130px; height:80px;">
+        <div class="resp-icon">🎨</div>
+        <div class="resp-name">Temas Visuales</div>
+        <div class="resp-count">dark / light</div>
+        <div class="tooltip">
+            <h4>🎨 Gestión de Temas</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                toggle_theme()<br>
+                _get_hover_color()
+            </div>
+            <div class="tt-warn">⚠️ Definición de colores hardcodeada dentro de la misma clase</div>
+        </div>
+    </div>
+
+    <!-- 9: Validación (izquierda-arriba) -->
+    <div class="responsibility resp-validate" id="resp-valid"
+         style="left:70px; top:90px; width:130px; height:80px;">
+        <div class="resp-icon">✅</div>
+        <div class="resp-name">Validación</div>
+        <div class="resp-count">números + entrada</div>
+        <div class="tooltip">
+            <h4>✅ Validación de Entrada</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                _validate_number()<br>
+                _validate_not_empty()
+            </div>
+            <div class="tt-warn">⚠️ Validación acoplada a messagebox (UI) directamente</div>
+        </div>
+    </div>
+
+    <!-- 10: Formateo (arriba-izquierda) -->
+    <div class="responsibility resp-state" id="resp-format"
+         style="left:240px; top:25px; width:130px; height:75px;">
+        <div class="resp-icon">🔤</div>
+        <div class="resp-name">Formateo</div>
+        <div class="resp-count">números + símbolos</div>
+        <div class="tooltip">
+            <h4>🔤 Formateo de Números</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                _format_number()
+            </div>
+            <div class="tt-warn">⚠️ Método de utilidad perdido dentro de una clase gigante</div>
+        </div>
+    </div>
+
+    <!-- 11: Estadísticas (arriba-derecha) -->
+    <div class="responsibility resp-state" id="resp-stats"
+         style="left:600px; top:25px; width:140px; height:75px;">
+        <div class="resp-icon">📊</div>
+        <div class="resp-name">Estadísticas</div>
+        <div class="resp-count">conteo + reporte</div>
+        <div class="tooltip">
+            <h4>📊 Estadísticas de Uso</h4>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                show_statistics()
+            </div>
+            <div class="tt-warn">⚠️ Generación de reporte + UI de messagebox en un solo método</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Warning bar ── -->
+<div class="warning-bar">
+    <div class="warning-item">
+        <div class="wi-icon">❌</div>
+        <div class="wi-text"><strong>Viola SRP:</strong> 11+ responsabilidades<br>en una sola clase</div>
+    </div>
+    <div class="warning-item">
+        <div class="wi-icon">❌</div>
+        <div class="wi-text"><strong>Baja Cohesión:</strong> Métodos de UI, I/O,<br>cálculo y validación juntos</div>
+    </div>
+    <div class="warning-item">
+        <div class="wi-icon">❌</div>
+        <div class="wi-text"><strong>Alto Acoplamiento:</strong> Imposible cambiar<br>un aspecto sin impactar los demás</div>
+    </div>
+    <div class="warning-item">
+        <div class="wi-icon">❌</div>
+        <div class="wi-text"><strong>777 líneas:</strong> en un solo archivo,<br>difícil de mantener y testear</div>
+    </div>
+</div>
+
+<script>
+    const svg = document.getElementById('svgLines');
+    const container = document.getElementById('diagram');
+
+    function getCenter(id) {
+        const el = document.getElementById(id);
+        const cr = el.getBoundingClientRect();
+        const pr = container.getBoundingClientRect();
+        return {
+            x: cr.left - pr.left + cr.width / 2,
+            y: cr.top - pr.top + cr.height / 2
+        };
+    }
+
+    function drawLine(fromId, toId, color) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const from = getCenter(fromId);
+        const to = getCenter(toId);
+
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const cx1 = from.x + dx * 0.3;
+        const cy1 = from.y + dy * 0.1;
+        const cx2 = from.x + dx * 0.7;
+        const cy2 = from.y + dy * 0.9;
+
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', `M${from.x},${from.y} C${cx1},${cy1} ${cx2},${cy2} ${to.x},${to.y}`);
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('opacity', '0.35');
+        path.style.animation = 'pulse-line 3s ease-in-out infinite';
+
+        // Desfase de animación aleatorio
+        path.style.animationDelay = `${Math.random() * 2}s`;
+
+        svg.appendChild(path);
+
+        // Flecha al final
+        const arrowSize = 7;
+        const a = Math.atan2(to.y - cy2, to.x - cx2);
+        const arrow = document.createElementNS(ns, 'polygon');
+        arrow.setAttribute('points', [
+            `${to.x},${to.y}`,
+            `${to.x - arrowSize * Math.cos(a - 0.4)},${to.y - arrowSize * Math.sin(a - 0.4)}`,
+            `${to.x - arrowSize * Math.cos(a + 0.4)},${to.y - arrowSize * Math.sin(a + 0.4)}`
+        ].join(' '));
+        arrow.setAttribute('fill', color);
+        arrow.setAttribute('opacity', '0.5');
+        svg.appendChild(arrow);
+    }
+
+    function draw() {
+        svg.innerHTML = '';
+        const rect = container.getBoundingClientRect();
+        svg.setAttribute('width', rect.width);
+        svg.setAttribute('height', rect.height);
+
+        const god = 'node-god';
+        const connections = [
+            ['resp-ui',     '#00b894'],
+            ['resp-arith',  '#74b9ff'],
+            ['resp-sci',    '#74b9ff'],
+            ['resp-mem',    '#a29bfe'],
+            ['resp-hist',   '#fdcb6e'],
+            ['resp-file',   '#fdcb6e'],
+            ['resp-log',    '#fdcb6e'],
+            ['resp-theme',  '#fd79a8'],
+            ['resp-valid',  '#55efc4'],
+            ['resp-format', '#a29bfe'],
+            ['resp-stats',  '#a29bfe'],
+        ];
+
+        connections.forEach(([id, color]) => {
+            drawLine(god, id, color);
+        });
+    }
+
+    window.addEventListener('load', draw);
+    window.addEventListener('resize', draw);
+</script>
+
+</body>
+</html>

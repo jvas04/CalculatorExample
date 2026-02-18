@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Clases — Calculadora SRP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            padding: 30px 20px 10px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e94560, #6c5ce7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .header p {
+            font-size: 13px;
+            color: #636e72;
+        }
+
+        /* ── Leyenda ── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 14px 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+        .legend-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        .legend-line span {
+            display: inline-block;
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .legend-line .solid { background: #74b9ff; }
+        .legend-line .dashed { background: repeating-linear-gradient(90deg, #fdcb6e 0 6px, transparent 6px 10px); height: 3px; }
+        .legend-line .dotted { background: repeating-linear-gradient(90deg, #a29bfe 0 3px, transparent 3px 7px); height: 3px; }
+
+        /* ── Diagrama principal ── */
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 750px;
+        }
+
+        /* ── Paquetes ── */
+        .package {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 16px;
+            padding: 16px 14px 14px;
+        }
+        .package-label {
+            position: absolute;
+            top: -12px;
+            left: 18px;
+            padding: 2px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Colores por paquete */
+        .pkg-controllers { border-color: #e9456040; }
+        .pkg-controllers .package-label { background: #e94560; color: #fff; }
+
+        .pkg-views { border-color: #00b89440; }
+        .pkg-views .package-label { background: #00b894; color: #fff; }
+
+        .pkg-models { border-color: #0984e340; }
+        .pkg-models .package-label { background: #0984e3; color: #fff; }
+
+        .pkg-services { border-color: #fdcb6e40; }
+        .pkg-services .package-label { background: #d4a017; color: #fff; }
+
+        .pkg-utils { border-color: #6c5ce740; }
+        .pkg-utils .package-label { background: #6c5ce7; color: #fff; }
+
+        /* ── Clases (nodos) ── */
+        .class-node {
+            position: absolute;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+        .class-node:hover {
+            transform: scale(1.08);
+            z-index: 10;
+            box-shadow: 0 8px 35px rgba(0,0,0,0.5);
+        }
+        .class-node:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .class-icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+        .class-name {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 0 6px;
+        }
+        .class-srp {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 2px;
+            padding: 0 6px;
+        }
+
+        /* Colores de nodos por paquete */
+        .node-controller { background: linear-gradient(135deg, #e94560, #c0392b); color: #fff; }
+        .node-view { background: linear-gradient(135deg, #00b894, #00a381); color: #fff; }
+        .node-model { background: linear-gradient(135deg, #0984e3, #0652DD); color: #fff; }
+        .node-service { background: linear-gradient(135deg, #fdcb6e, #d4a017); color: #2d3436; }
+        .node-util { background: linear-gradient(135deg, #6c5ce7, #5b4cdb); color: #fff; }
+
+        /* ── Tooltip ── */
+        .tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: #1e1e2e;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            z-index: 100;
+            text-align: left;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            pointer-events: none;
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #1e1e2e;
+        }
+        .tooltip h4 {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .tooltip .tt-section {
+            font-size: 10px;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+        }
+        .tooltip .tt-section strong {
+            color: #ddd;
+        }
+        .tooltip .tt-list {
+            font-size: 10px;
+            color: #74b9ff;
+            line-height: 1.5;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* ── SVG de conexiones ── */
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .diagram-container { transform: scale(0.65); transform-origin: top center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Diagrama de Clases UML</h1>
+    <p>Calculadora — SRP (SOLID) + Alta Cohesión (GRASP) &nbsp;|&nbsp; 13 clases &nbsp;|&nbsp; 5 paquetes</p>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#e94560"></div> controllers</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#00b894"></div> views</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0984e3"></div> models</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fdcb6e"></div> services</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> utils</div>
+    <span style="color:#444;margin:0 6px">|</span>
+    <div class="legend-line"><span class="solid"></span> Composición</div>
+    <div class="legend-line"><span class="dashed"></span> Agregación</div>
+    <div class="legend-line"><span class="dotted"></span> Dependencia</div>
+</div>
+
+<div class="diagram-container" id="diagram">
+    <!-- SVG para líneas de conexión -->
+    <svg class="connections-svg" id="svgLines"></svg>
+
+    <!-- ══════════ PAQUETE: controllers (CENTRO) ══════════ -->
+    <div class="package pkg-controllers" style="left:420px; top:260px; width:250px; height:145px;">
+        <div class="package-label">controllers</div>
+    </div>
+
+    <div class="class-node node-controller" id="node-controller"
+         style="left:445px; top:280px; width:200px; height:110px;">
+        <div class="class-icon">🎮</div>
+        <div class="class-name">CalculatorController</div>
+        <div class="class-srp">Orquestador</div>
+        <div class="tooltip">
+            <h4>🎮 CalculatorController</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Coordinar la comunicación entre Vista y Modelos</div>
+            <div class="tt-section"><strong>Atributos:</strong> view, theme, formatter, validator, logger, math, scientific, memory, history, file_mgr, stats</div>
+            <div class="tt-section"><strong>Métodos principales:</strong></div>
+            <div class="tt-list">
+                + initialize()<br>
+                + on_digit() / on_operator() / on_equals()<br>
+                + on_sqrt() / on_square() / on_percentage()<br>
+                + on_memory_*() / on_show_history()<br>
+                + on_toggle_theme() / on_keypress()
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ PAQUETE: views (ARRIBA-IZQUIERDA) ══════════ -->
+    <div class="package pkg-views" style="left:30px; top:15px; width:310px; height:200px;">
+        <div class="package-label">views</div>
+    </div>
+
+    <div class="class-node node-view" id="node-calcview"
+         style="left:50px; top:45px; width:140px; height:85px;">
+        <div class="class-icon">🖥️</div>
+        <div class="class-name">CalculatorView</div>
+        <div class="class-srp">Interfaz principal</div>
+        <div class="tooltip">
+            <h4>🖥️ CalculatorView</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Construir y actualizar widgets de la UI</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + setup_window() / build_display()<br>
+                + build_keypad() / build_stats_bar()<br>
+                + update_display() / update_theme()<br>
+                + get_display_value() / bind_keyboard()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-view" id="node-histview"
+         style="left:215px; top:130px; width:110px; height:65px;">
+        <div class="class-icon">📋</div>
+        <div class="class-name">HistoryView</div>
+        <div class="class-srp">Ventana historial</div>
+        <div class="tooltip">
+            <h4>📋 HistoryView</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Mostrar ventana emergente del historial</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + show()<br>
+                - _build_records_list()<br>
+                - _build_action_buttons()
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ PAQUETE: models (ARRIBA-DERECHA + DERECHA) ══════════ -->
+    <div class="package pkg-models" style="left:700px; top:15px; width:400px; height:380px;">
+        <div class="package-label">models</div>
+    </div>
+
+    <div class="class-node node-model" id="node-math"
+         style="left:725px; top:45px; width:120px; height:75px;">
+        <div class="class-icon">🔢</div>
+        <div class="class-name">MathEngine</div>
+        <div class="class-srp">Aritmética</div>
+        <div class="tooltip">
+            <h4>🔢 MathEngine</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Operaciones aritméticas básicas</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + calculate(operator, a, b)<br>
+                + add() / subtract() «static»<br>
+                + multiply() / divide() «static»
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-model" id="node-sci"
+         style="left:870px; top:45px; width:120px; height:75px;">
+        <div class="class-icon">🧪</div>
+        <div class="class-name">ScientificOps</div>
+        <div class="class-srp">Científicas</div>
+        <div class="tooltip">
+            <h4>🧪 ScientificOperations</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Operaciones científicas</div>
+            <div class="tt-section"><strong>Métodos (todos static):</strong></div>
+            <div class="tt-list">
+                + square_root() / square()<br>
+                + percentage() / negate()<br>
+                + get_pi()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-model" id="node-memory"
+         style="left:725px; top:165px; width:120px; height:75px;">
+        <div class="class-icon">💾</div>
+        <div class="class-name">MemoryManager</div>
+        <div class="class-srp">Memoria</div>
+        <div class="tooltip">
+            <h4>💾 MemoryManager</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Gestionar la memoria de la calculadora</div>
+            <div class="tt-section"><strong>Atributos:</strong> -_memory : float</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + add() / subtract()<br>
+                + recall() / clear()<br>
+                + has_value()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-model" id="node-history"
+         style="left:870px; top:165px; width:120px; height:75px;">
+        <div class="class-icon">📜</div>
+        <div class="class-name">HistoryManager</div>
+        <div class="class-srp">Historial</div>
+        <div class="tooltip">
+            <h4>📜 HistoryManager</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Gestionar el historial de operaciones</div>
+            <div class="tt-section"><strong>Atributos:</strong> -_records : list[dict]</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + add_record() / clear()<br>
+                + get_all_records()<br>
+                + get_records_reversed()<br>
+                + is_empty() / count()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-model" id="node-stats"
+         style="left:790px; top:295px; width:130px; height:75px;">
+        <div class="class-icon">📊</div>
+        <div class="class-name">StatisticsReporter</div>
+        <div class="class-srp">Estadísticas</div>
+        <div class="tooltip">
+            <h4>📊 StatisticsReporter</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Rastrear y reportar estadísticas de uso</div>
+            <div class="tt-section"><strong>Atributos:</strong> -_stats : dict</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + record_operation() / record_scientific()<br>
+                + get_total() / get_stats_dict()<br>
+                + generate_report() / reset()
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ PAQUETE: services (ABAJO-IZQUIERDA) ══════════ -->
+    <div class="package pkg-services" style="left:30px; top:300px; width:300px; height:150px;">
+        <div class="package-label">services</div>
+    </div>
+
+    <div class="class-node node-service" id="node-file"
+         style="left:55px; top:325px; width:120px; height:75px;">
+        <div class="class-icon">📁</div>
+        <div class="class-name">FileManager</div>
+        <div class="class-srp">Persistencia</div>
+        <div class="tooltip">
+            <h4>📁 FileManager</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Persistir datos en archivos</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + save_as_json() «static»<br>
+                + save_as_text() «static»<br>
+                + save()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-service" id="node-logger"
+         style="left:195px; top:325px; width:120px; height:75px;">
+        <div class="class-icon">🪵</div>
+        <div class="class-name">ErrorLogger</div>
+        <div class="class-srp">Logging</div>
+        <div class="tooltip">
+            <h4>🪵 ErrorLogger</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Registrar errores en archivo de log</div>
+            <div class="tt-section"><strong>Atributos:</strong> -_log_path : str</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + log(error_msg)<br>
+                + get_log_path()
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ PAQUETE: utils (ABAJO) ══════════ -->
+    <div class="package pkg-utils" style="left:330px; top:500px; width:500px; height:140px;">
+        <div class="package-label">utils</div>
+    </div>
+
+    <div class="class-node node-util" id="node-theme"
+         style="left:355px; top:525px; width:120px; height:75px;">
+        <div class="class-icon">🎨</div>
+        <div class="class-name">ThemeManager</div>
+        <div class="class-srp">Temas visuales</div>
+        <div class="tooltip">
+            <h4>🎨 ThemeManager</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Gestionar paletas de colores y temas</div>
+            <div class="tt-section"><strong>Constantes:</strong> DARK_THEME, LIGHT_THEME</div>
+            <div class="tt-section"><strong>Métodos:</strong></div>
+            <div class="tt-list">
+                + get_colors() / toggle_theme()<br>
+                + get_hover_color()<br>
+                + get_theme_icon()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-util" id="node-formatter"
+         style="left:500px; top:525px; width:130px; height:75px;">
+        <div class="class-icon">🔤</div>
+        <div class="class-name">NumberFormatter</div>
+        <div class="class-srp">Formateo</div>
+        <div class="tooltip">
+            <h4>🔤 NumberFormatter</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Formatear números para el display</div>
+            <div class="tt-section"><strong>Métodos (todos static):</strong></div>
+            <div class="tt-list">
+                + format(number)<br>
+                + get_operator_symbol()
+            </div>
+        </div>
+    </div>
+
+    <div class="class-node node-util" id="node-validator"
+         style="left:655px; top:525px; width:120px; height:75px;">
+        <div class="class-icon">✅</div>
+        <div class="class-name">InputValidator</div>
+        <div class="class-srp">Validación</div>
+        <div class="tooltip">
+            <h4>✅ InputValidator</h4>
+            <div class="tt-section"><strong>Responsabilidad:</strong> Validar entrada del usuario</div>
+            <div class="tt-section"><strong>Métodos (todos static):</strong></div>
+            <div class="tt-list">
+                + parse_number() / is_valid_display()<br>
+                + can_add_decimal()<br>
+                + is_division_by_zero() / is_negative()
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Dibujar conexiones SVG ──
+    const svg = document.getElementById('svgLines');
+    const container = document.getElementById('diagram');
+
+    function getCenter(id) {
+        const el = document.getElementById(id);
+        const cr = el.getBoundingClientRect();
+        const pr = container.getBoundingClientRect();
+        return {
+            x: cr.left - pr.left + cr.width / 2,
+            y: cr.top - pr.top + cr.height / 2
+        };
+    }
+
+    function getEdge(id, side) {
+        const el = document.getElementById(id);
+        const cr = el.getBoundingClientRect();
+        const pr = container.getBoundingClientRect();
+        const rect = {
+            x: cr.left - pr.left,
+            y: cr.top - pr.top,
+            w: cr.width,
+            h: cr.height
+        };
+        switch(side) {
+            case 'top': return { x: rect.x + rect.w/2, y: rect.y };
+            case 'bottom': return { x: rect.x + rect.w/2, y: rect.y + rect.h };
+            case 'left': return { x: rect.x, y: rect.y + rect.h/2 };
+            case 'right': return { x: rect.x + rect.w, y: rect.y + rect.h/2 };
+        }
+    }
+
+    function drawLine(from, to, color, type, label) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const g = document.createElementNS(ns, 'g');
+
+        // Calcular puntos de control para curva
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const cx1 = from.x + dx * 0.2;
+        const cy1 = from.y + dy * 0.5;
+        const cx2 = from.x + dx * 0.8;
+        const cy2 = from.y + dy * 0.5;
+
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', `M${from.x},${from.y} C${cx1},${cy1} ${cx2},${cy2} ${to.x},${to.y}`);
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('opacity', '0.5');
+
+        if (type === 'dashed') {
+            path.setAttribute('stroke-dasharray', '8,4');
+        } else if (type === 'dotted') {
+            path.setAttribute('stroke-dasharray', '4,4');
+        }
+
+        g.appendChild(path);
+
+        // Diamante para composición / rombo vacío para agregación
+        if (type === 'solid' || type === 'dashed') {
+            const size = 8;
+            const angle = Math.atan2(to.y - cy1, to.x - cx1);
+            // Dibujar el diamante en el punto de origen (from)
+            const diamond = document.createElementNS(ns, 'polygon');
+            const a2 = Math.atan2(cy1 - from.y, cx1 - from.x);
+            const px = [
+                `${from.x},${from.y}`,
+                `${from.x + size * Math.cos(a2 + 0.5)},${from.y + size * Math.sin(a2 + 0.5)}`,
+                `${from.x + size * 2 * Math.cos(a2)},${from.y + size * 2 * Math.sin(a2)}`,
+                `${from.x + size * Math.cos(a2 - 0.5)},${from.y + size * Math.sin(a2 - 0.5)}`
+            ];
+            diamond.setAttribute('points', px.join(' '));
+            diamond.setAttribute('stroke', color);
+            diamond.setAttribute('stroke-width', '1.5');
+            diamond.setAttribute('fill', type === 'solid' ? color : 'none');
+            diamond.setAttribute('opacity', '0.7');
+            g.appendChild(diamond);
+        }
+
+        // Flecha al final
+        const arrowSize = 7;
+        const a3 = Math.atan2(to.y - cy2, to.x - cx2);
+        const arrow = document.createElementNS(ns, 'polygon');
+        arrow.setAttribute('points', [
+            `${to.x},${to.y}`,
+            `${to.x - arrowSize * Math.cos(a3 - 0.4)},${to.y - arrowSize * Math.sin(a3 - 0.4)}`,
+            `${to.x - arrowSize * Math.cos(a3 + 0.4)},${to.y - arrowSize * Math.sin(a3 + 0.4)}`
+        ].join(' '));
+        arrow.setAttribute('fill', color);
+        arrow.setAttribute('opacity', '0.6');
+        g.appendChild(arrow);
+
+        svg.appendChild(g);
+    }
+
+    function draw() {
+        svg.innerHTML = '';
+        const rect = container.getBoundingClientRect();
+        svg.setAttribute('width', rect.width);
+        svg.setAttribute('height', rect.height);
+
+        const ctrl = 'node-controller';
+
+        // Composición: Controller ◆──► Models (derecha)
+        drawLine(getEdge(ctrl,'right'), getEdge('node-math','left'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'right'), getEdge('node-sci','left'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'right'), getEdge('node-memory','left'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'right'), getEdge('node-history','left'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'right'), getEdge('node-stats','left'), '#74b9ff', 'solid');
+
+        // Composición: Controller ◆──► Services (izquierda)
+        drawLine(getEdge(ctrl,'left'), getEdge('node-file','right'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'left'), getEdge('node-logger','right'), '#74b9ff', 'solid');
+
+        // Composición: Controller ◆──► Utils (abajo)
+        drawLine(getEdge(ctrl,'bottom'), getEdge('node-theme','top'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'bottom'), getEdge('node-formatter','top'), '#74b9ff', 'solid');
+        drawLine(getEdge(ctrl,'bottom'), getEdge('node-validator','top'), '#74b9ff', 'solid');
+
+        // Agregación: Controller ◇──► CalculatorView (arriba-izquierda)
+        drawLine(getEdge(ctrl,'top'), getEdge('node-calcview','bottom'), '#fdcb6e', 'dashed');
+
+        // Dependencia: Controller ···► HistoryView (arriba-izquierda)
+        drawLine(getEdge(ctrl,'top'), getEdge('node-histview','bottom'), '#a29bfe', 'dotted');
+    }
+
+    window.addEventListener('load', draw);
+    window.addEventListener('resize', draw);
+</script>
+
+</body>
+</html>
